@@ -1,4 +1,5 @@
 # Web-based Survey System
+
 <p align="center">
 <b>
 DROP TABLE team;
@@ -11,6 +12,9 @@ Billy Leggett,
 Christian Orr,
 Gerald Cordova
 </b>
+</p>
+<p align="center">
+<a href="https://docs.google.com/document/d/1zyVqgEqLQ-gNRHQOU-UYxR8vgN_Kmk0Xd-oDxtj_oXE/edit">GoogleDoc</a> 
 </p>
 
 ## Project Definition 
