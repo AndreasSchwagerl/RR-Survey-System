@@ -73,19 +73,10 @@ This system will effectively be a web-based application. This means we have the 
   - Manage Questions Page
 - Survey Page
 - Database
-- Entity Relationship Model
 
 ![erm](https://user-images.githubusercontent.com/35355922/36083599-2e928444-0f82-11e8-8a64-5291fe21c0df.png)
-
-- Identify subsystems – design point of view 
-  - Illustrate with class, use-case, UML, sequence ..... diagrams
-  - Design choices (Optional)
--Sub-System Communication 
-  - Controls
-  - I/O
-  - DataFlow
   
-  ![dataflow](https://user-images.githubusercontent.com/35355922/36083729-efef1a70-0f83-11e8-994e-a53e07504e08.png)
+![dataflow](https://user-images.githubusercontent.com/35355922/36083729-efef1a70-0f83-11e8-994e-a53e07504e08.png)
   
 
 
