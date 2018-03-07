@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+table {
+	font-family: arial, sans-serif;
+	border-collapse: collapse;
+	width: 100%;
+}
+
+td, th {
+	border: 4px solid #dddddd;
+	text-align: center;
+	padding: 8px;
+}
+
+tr:nth-child(1) {
+	background-color: #dddddd;
+}
+
+span {
+	padding-top: 5px;
+	padding-right: 5px;
+	padding-bottom: 5px;
+	padding-left: 5px;
+}
+</style>
+</head>
+
+<body>
+
+<h2>Question Table</h2>
+
+<table id="questionTable">
+	<tr>
+		<th>ID</th>
+		<th>Left Statement</th>
+		<th>Right Statement</th>
+		<th></th>
+	</tr>
+</table>
+
+<script>
+var totalQuestions = 5; // This is where I'd apply info from DB
+var table = document.getElementById("questionTable");
+var rows = [];
+var leftCells = [];
+var rightCells = [];
+var editCells = [];
+var cellBtns = [];
+
+// initalizeRows() is for setting up the table with rows statements we have
+//                 stored in our database when we first look at this table
+function initializeRows() {
+  
+    var idNumCell;
+  
+	for (var i = 0; i < totalQuestions; i++) {
+        rows[i] = table.insertRow(i+1);
+        idNumCell = rows[i].insertCell(0);
+        idNumCell.id = "id"+i;
+        idNumCell.innerHTML = "" + (i+1);
+      
+        leftCells[i] = rows[i].insertCell(1);
+        leftCells[i].innerHTML = "Left Statement " + (i+1); // This is where I'd apply info from DB
+      
+        rightCells[i] = rows[i].insertCell(2);  
+        rightCells[i].innerHTML = "Right Statement " + (i+1); // This is where I'd apply info from DB
+      
+        editCells[i] = rows[i].insertCell(3);
+      
+        cellBtns[i] = [];
+	}
+  
+    for (i = 0; i < totalQuestions; i++) {
+        for (var j = 0; j < 2; j++) {
+            cellBtns[i][j] = document.createElement("button");
+            if (j % 2 ==0) {
+                cellBtns[i][j].appendChild(document.createTextNode("Edit"));
+                cellBtns[i][j].setAttribute("id", "edit"+i);
+                cellBtns[i][j].onclick = function() { changeRow(this); };
+                cellBtns[i][j].style.marginRight = "20px";
+            }
+            else {
+                cellBtns[i][j].appendChild(document.createTextNode("Delete"));
+                cellBtns[i][j].setAttribute("id", "delete"+i);
+                cellBtns[i][j].onclick = function() { verifyDeletion(this); };
+            }
+            editCells[i].appendChild(cellBtns[i][j]);
+        }
+    }
+  
+    rows[i] = table.insertRow(i+1);
+    rows[i].insertCell(0);
+    var leftStatementCell = rows[i].insertCell(1);
+    var rightStatementCell = rows[i].insertCell(2);
+    editCells[i] = rows[i].insertCell(3);
+  
+    var leftInput = document.createElement("input");
+    leftInput.type = "text";
+    leftInput.id = "left";
+    leftStatementCell.appendChild(leftInput);
+  
+    var rightInput = document.createElement("input");
+    rightInput.type = "text";
+    rightInput.id = "right";
+    rightStatementCell.appendChild(rightInput);
+  
+    var addRowBtn = document.createElement("button");
+    addRowBtn.onclick = function() { addNewRow(); };
+    addRowBtn.setAttribute("id", "add");
+    addRowBtn.appendChild(document.createTextNode("Add Statements"));
+    editCells[i].appendChild(addRowBtn);
+}
+
+// Then we call initializeRows() to set up the page
+initializeRows();
+
+// addNewRow() is called when the "Add Statements" button is clicked.
+//             If the left and right statements both have some kind
+//             of text input from the user, then a row will be added
+//             to the table with that user input.
+function addNewRow() {
+    // First we check to make sure text boxes aren't empty
+    var leftInput = document.getElementById("left");
+    var rightInput = document.getElementById("right");
+    if (! (leftInput.value == "" || rightInput.value == "") ) {
+      // Next we increment totalQuestions
+      totalQuestions++;
+      
+      // Then we preserve the value inside the text boxes
+      var newLeftStatement = leftInput.value;
+      var newRightStatement = rightInput.value;
+      
+      // Then we can delete the row from the table
+      table.deleteRow(totalQuestions);
+      
+      // Now we can add a new row with our new statements
+      rows[totalQuestions-1] = table.insertRow(totalQuestions);
+      
+      // Settings up ID cell
+      var idNumCell = rows[totalQuestions-1].insertCell(0);
+      idNumCell.id = "id"+(totalQuestions-1);
+      idNumCell.textContent = totalQuestions;
+      
+      // Setting up left statement cell
+      leftCells[totalQuestions-1] = rows[totalQuestions-1].insertCell(1);
+      leftCells[totalQuestions-1].innerHTML = newLeftStatement;
+      
+      // Setting up right statement cell
+      rightCells[totalQuestions-1] = rows[totalQuestions-1].insertCell(2);
+      rightCells[totalQuestions-1].innerHTML = newRightStatement;
+      
+      // Inserting the cell with the edit/delete button
+      editCells[totalQuestions-1] = rows[totalQuestions-1].insertCell(3);
+      
+      cellBtns[totalQuestions-1] = [];
+      
+      // Creating and inserting edit button
+      cellBtns[totalQuestions-1][0] = document.createElement("button");
+      cellBtns[totalQuestions-1][0].appendChild(document.createTextNode("Edit"));
+      cellBtns[totalQuestions-1][0].setAttribute("id", ("edit"+(totalQuestions-1)));
+      cellBtns[totalQuestions-1][0].onclick = function() { changeRow(this); };
+      cellBtns[totalQuestions-1][0].style.marginRight = "20px";
+      
+      editCells[totalQuestions-1].appendChild( cellBtns[totalQuestions-1][0] );
+      
+      // Creating and inserting delete button
+      cellBtns[totalQuestions-1][1] = document.createElement("button");
+      cellBtns[totalQuestions-1][1].appendChild(document.createTextNode("Delete"));
+      cellBtns[totalQuestions-1][1].setAttribute("id", ("delete"+(totalQuestions-1)));
+      cellBtns[totalQuestions-1][1].onclick = function() { verifyDeletion(this); };
+      
+      editCells[totalQuestions-1].appendChild( cellBtns[totalQuestions-1][1] );
+      
+      // Now we just need one final row with space to add a new question
+      rows[totalQuestions] = table.insertRow(totalQuestions+1);
+      rows[totalQuestions].insertCell(0);
+      var leftStatementCell = rows[totalQuestions].insertCell(1);
+      var rightStatementCell = rows[totalQuestions].insertCell(2);
+      editCells[totalQuestions] = rows[totalQuestions].insertCell(3);
+  
+      // Creating and inserting left statement textbox
+      var leftInput = document.createElement("input");
+      leftInput.type = "text";
+      leftInput.id = "left";
+      leftStatementCell.appendChild(leftInput);
+  
+      // Creating and inserting right statement textbox
+      var rightInput = document.createElement("input");
+      rightInput.type = "text";
+      rightInput.id = "right";
+      rightStatementCell.appendChild(rightInput);
+  
+      // Creating and inserting "Add Statements" button
+      var addRowBtn = document.createElement("button");
+      addRowBtn.onclick = function() { addNewRow(); };
+      addRowBtn.setAttribute("id", "add");
+      addRowBtn.appendChild(document.createTextNode("Add Statements"));
+      editCells[totalQuestions].appendChild(addRowBtn);//
+  }
+}
+
+// changeRow(button) is ran when the Edit/Submit button is clicked. This
+//                   function is used for two uses. The first use is as
+//                   an edit button. All other buttons on the table are
+//                   disabled and the left/right statement cells are turned
+//                   into text input boxes for the user to change a statement.
+//                   The second use is as a submit button. All buttons are
+//                   enabled again, the text boxes are reverted to text labels,
+//                   and the user's input changes are saved.
+function changeRow(button) {
+    // This function will work for editing the content in a row, as well as
+    // submitting the changes to that row's content
+  
+    // Identify button's row in the table
+    var rowNum = button.id.substring(4);
+  
+    var leftText;
+    var rightText;
+  
+    if (button.textContent == "Edit")
+      {
+        // Disable all buttons
+        for (var i = 0; i < totalQuestions; i++)
+          {
+            cellBtns[i][0].disabled = true;
+            cellBtns[i][1].disabled = true;
+          }
+        
+        // Enable button we've clicked and disable the "Add Statements" button
+        button.disabled = false;
+        document.getElementById("add").disabled = true;
+        
+        // Change label on button we've clicked
+        button.textContent = "Submit";
+        
+        // Set up text box for the left statement
+        leftText = leftCells[rowNum].textContent;
+        
+        leftCells[rowNum].removeChild(leftCells[rowNum].firstChild);
+        
+        var leftTextBox = document.createElement("input");
+        leftTextBox.type = "text";
+        leftTextBox.id = "leftEdit";
+        leftTextBox.value = leftText;
+        
+        leftCells[rowNum].appendChild(leftTextBox);
+        
+        // Set up text box for the right statement
+        rightText = rightCells[rowNum].textContent;
+        
+        rightCells[rowNum].removeChild(rightCells[rowNum].firstChild);
+        
+        var rightTextBox = document.createElement("input");
+        rightTextBox.type = "text";
+        rightTextBox.id = "rightEdit";
+        rightTextBox.value = rightText;
+        
+        rightCells[rowNum].appendChild(rightTextBox);
+      }
+    else // If we're here, we clicked a "Submit" button
+      {
+        // Enable all buttons
+        for (var j = 0; j < totalQuestions; j++)
+          {
+            cellBtns[j][0].disabled = false;
+            cellBtns[j][1].disabled = false;
+          }
+        document.getElementById("add").disabled = false;
+        
+        // Change label on button back to "Edit"
+        button.textContent = "Edit";
+        
+        // Revert left statement to a text label with new information
+        leftText = document.getElementById("leftEdit").value;
+        
+        leftCells[rowNum].removeChild(leftCells[rowNum].firstChild);
+        
+        leftCells[rowNum].appendChild(document.createTextNode(leftText));
+        
+        // Revert right statement to a text label with new information
+        rightText = document.getElementById("rightEdit").value;
+        
+        rightCells[rowNum].removeChild(rightCells[rowNum].firstChild);
+        
+        rightCells[rowNum].appendChild(document.createTextNode(rightText));
+      }
+}
+  
+// verifyDeletion(button) is a function called to make sure the user wants to
+//                        delete the statement. If the user chooses "Okay" in
+//                        the popup then the row that the button is in is
+//                        passed to the deleteStatements(string x) function
+function verifyDeletion(button) {
+  
+  if (confirm("Are you sure you wish to delete this pair of statements?"))
+    deleteStatements(button.id.substring(6))
+}
+
+// deleteStatements(rowNum) is a function called to delete the statements in
+//                          a row chosen by the user.
+function deleteStatements(rowNum) {
+  
+  // First we remove the row that the user wanted deleted from the table
+  table.deleteRow(parseInt(rowNum)+1);
+  
+  var idCell;
+  
+  for (var i = parseInt(rowNum); i < (totalQuestions-1); i++)
+    {
+      // Next we correct the ID cell
+      idCell = document.getElementById("id"+(i+1));
+      idCell.textContent = "" + (i+1);
+      idCell.id = "id"+i;
+      
+      // Then we correct the global variables
+      rows[i] = rows[i+1];
+      leftCells[i] = leftCells[i+1];
+      rightCells[i] = rightCells[i+1];
+      editCells[i] = editCells[i+1];
+      cellBtns[i][0] = cellBtns[i+1][0];
+      cellBtns[i][1] = cellBtns[i+1][1];
+      
+      // Then we correct the ID of the edit/delete buttons
+      cellBtns[i][0].id = "edit"+i;
+      cellBtns[i][1].id = "delete" + i;
+    }
+  
+  // Finally, decrement totalQuestions
+  totalQuestions--;
+}
+</script>
+
+</body>
+</html>
