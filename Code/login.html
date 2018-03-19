@@ -1,74 +1,76 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<style>
-    @import url('https://fonts.googleapis.com/css?family=Ubuntu:300i,500');
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        @import url('https://fonts.googleapis.com/css?family=Ubuntu:300i,500');
 
 
 
-    .block {
-        display: inline-block;
-    }
+        .block {
+            display: inline-block;
+        }
 
-    .center {
-    padding: 0 0;
-    text-align: center;
-}
+        .center {
+            padding: 0 0;
+            text-align: center;
+        }
 
-    .static{
-        position: relative;
-        top: -56px;
-        left: 25px;
-    }
+        .static{
+            position: relative;
+            top: -56px;
+            left: 25px;
+        }
 
-    .padding{
-        margin-top:20%;
-    }
+        .padding{
+            margin-top:20%;
+        }
 
-    .centersub {
-        margin-top: 5%;
-        padding: 0 0;
-        text-align: center;
-    }
+        .centersub {
+            margin-top: 5%;
+            padding: 0 0;
+            text-align: center;
+        }
 
-    .centerbutton{
-        margin-top: -5%;
-        padding: 0 0;
-        text-align: center;
-    }
+        .centerbutton{
+            margin-top: -5%;
+            padding: 0 0;
+            text-align: center;
+        }
 
-    .ubu_main {
-    font-family: Ubuntu, Times, serif;
-    color: #273544
-}
-    .ubu_and{
-        font-family: Ubuntu, Times, serif;
-    }
+        .ubu_main {
+            font-family: Ubuntu, Times, serif;
+            color: #273544
+        }
+        .ubu_and{
+            font-family: Ubuntu, Times, serif;
+        }
 
-    .ubu_sub{
-        font-family: Ubuntu, Times, serif;
-        font-style: italic;
-        font-size: 20px;
-    }
+        .ubu_sub{
+            font-family: Ubuntu, Times, serif;
+            font-style: italic;
+            font-size: 20px;
+        }
 
-    .thick {
-    font-weight: bold;
-}
-    .button {
-    padding: 5px 32px;
-    text-align: center;
-    text-decoration: none;
-    display: inline-block;
-    font-size: 16px;
-    background-color: #273544
-}
+        .thick {
+            font-weight: bold;
+        }
+        .button {
+            padding: 5px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            background-color: #273544
+        }
 
-    .test{
-        font-size: 400%;
-    }
+        .test{
+            font-size: 400%;
+        }
 
-</style>
+    </style>
+</head>
+<body>
 
 <div class="center padding">
     <p class="ubu_main thick test">R&R</p>
@@ -81,12 +83,23 @@
 
 
 
-<form action="/action_page.php" class="centerbutton">
-    <input type="text" name="fname" placeholder="Username"><br>
-    <input type="text" name="lname" placeholder="Password"><br>
-    <br>
-    <input class="button" type="submit" value="Log In">
-  </form>  
+<form class="centerbutton">
+    <ul class="errorMessages"></ul>
+
+    <div>
+        <input id="password" type="text" placeholder="Username" required>
+    </div>
+
+    <div>
+        <input id="pass"  type="password" placeholder="Password" required></input>
+    </div>
+
+    <div class="buttons">
+        <button>Log In</button>
+    </div>
+</form>​
+
+
 
 </body>
-</html> 
+</html>
