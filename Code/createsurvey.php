@@ -46,6 +46,11 @@
 			legend {
 				padding: 2px;
 			}
+			
+			::-webkit-clear-button {
+				display: none;
+				-webkit-appearance: none;
+			}
 		</style>
 	</head>
 	
@@ -84,11 +89,24 @@
 	
 	<body>
 		<?php if ($_SERVER['REQUEST_METHOD'] === 'POST') : ?>
+			<?php 
+				$comp = $_POST['comp'];
+				echo $comp;
+			?>
+			
 			<form align="center">
 				<h1>The survey has been generated</h1>
 			</form>
 		<?php else : ?>
 			<form action="" onsubmit="return ValidateForm()" method = "post">
+				<table>
+					<thead>
+						<tr>
+							<th><h2 class="heading">Create New Survey</h1></th>
+						</tr>
+					</thead>
+				</table>
+				<br>
 				<div class="container">
 					<div class="maincolumn">
 						<fieldset>
@@ -112,14 +130,23 @@
 						</fieldset>
 						
 						<fieldset>
-						<legend>Step 2: Add Departments & Emails</legend>
+						<legend>Step 2: Select Date Range</legend>
+							Start Date:
+							<input type="date" id="dtpStart" style="width:98%" value="<?php echo date('Y-m-d');?>" min="<?php echo date('Y-m-d');?>">
+							<br><br>
+							End Date:
+							<input type="date" id="dtpEnd" style="width:98%" value="<?php echo date('Y-m-d', strtotime('tomorrow'));?>" min="<?php echo date('Y-m-d', strtotime('tomorrow'));?>">
+						</fieldset>
+						
+						<fieldset>
+						<legend>Step 3: Add Departments & Emails</legend>
 							<select id="lstDept" onchange="ChangeDepartment()" size="5" style="min-width:100%" disabled></select>
 							<br><br>
 							Department Name:
 							<input type="text" id="txtDeptName" oninput="UpdateDepartment()" style="width:98%" disabled>
 							<br><br>
 							Participant Emails (Comma Delimited):
-							<textarea rows="8" id="txtPartEmail" oninput="UpdatePartEmail()" style="width:98%; resize:none;" disabled></textarea>
+							<textarea rows="5" id="txtPartEmail" oninput="UpdatePartEmail()" style="width:98%; resize:none;" disabled></textarea>
 							<br><br>
 							<div class="table">
 								<div class="button">
@@ -137,10 +164,10 @@
 					</div>
 					<div class="maincolumn">
 						<fieldset>
-						<legend>Step 3: Select Questions</legend>
+						<legend>Step 4: Select Questions</legend>
 							<div class="container">
 								<div class="leftcolumn">
-									<select id="lstQuest1" size="10" style="min-width:95%" onchange="QuestionDataBinding(1)">
+									<select id="lstQuest1" size="16" style="min-width:95%" onchange="QuestionDataBinding(1)">
 										<?php
 											// Get the survey questions
 											$result = mysqli_query($mysqli, "SELECT * FROM Question ORDER BY ID ASC");
@@ -157,20 +184,20 @@
 									</select>
 								</div>
 								<div class="buttoncolumn">
-									<input type="button" id="btnMoveUp" value="ʌ" style="width:80%; margin-right:5px; margin-bottom:5px;" onclick="MoveUD('lstQuest2', 'up')"><br>
-									<input type="button" id="btnMoveOver" value=">" style="width:80%; margin-right:5px; margin-bottom:5px;" onclick="MoveLR('lstQuest1', 'lstQuest2', 'single', 1)"><br>
-									<input type="button" id="btnMoveOverAll" value="≫" style="width:80%; margin-right:5px; margin-bottom:5px;" onclick="MoveLR('lstQuest1', 'lstQuest2', 'all', 1)"><br>
-									<input type="button" id="btnMoveBackAll" value="≪" style="width:80%; margin-right:5px; margin-bottom:5px;" onclick="MoveLR('lstQuest2', 'lstQuest1', 'all', 2)"><br>
-									<input type="button" id="btnMoveBack" value="<" style="width:80%; margin-right:5px; margin-bottom:5px;" onclick="MoveLR('lstQuest2', 'lstQuest1', 'single', 2)"><br>
-									<input type="button" id="btnMoveDown" value="v" style="width:80%; margin-right:5px; margin-bottom:5px;" onclick="MoveUD('lstQuest2', 'down')">
+									<input type="button" id="btnMoveUp" value="ʌ" style="width:80%; margin-right:5px; margin-bottom:5px; height:38px;" onclick="MoveUD('lstQuest2', 'up')"><br>
+									<input type="button" id="btnMoveOver" value=">" style="width:80%; margin-right:5px; margin-bottom:5px; height:38px;" onclick="MoveLR('lstQuest1', 'lstQuest2', 'single', 1)"><br>
+									<input type="button" id="btnMoveOverAll" value="≫" style="width:80%; margin-right:5px; margin-bottom:5px; height:38px;" onclick="MoveLR('lstQuest1', 'lstQuest2', 'all', 1)"><br>
+									<input type="button" id="btnMoveBackAll" value="≪" style="width:80%; margin-right:5px; margin-bottom:5px; height:38px;" onclick="MoveLR('lstQuest2', 'lstQuest1', 'all', 2)"><br>
+									<input type="button" id="btnMoveBack" value="<" style="width:80%; margin-right:5px; margin-bottom:5px; height:38px;" onclick="MoveLR('lstQuest2', 'lstQuest1', 'single', 2)"><br>
+									<input type="button" id="btnMoveDown" value="v" style="width:80%; margin-right:5px; margin-bottom:5px; height:38px;" onclick="MoveUD('lstQuest2', 'down')">
 								</div>
 								<div class="rightcolumn">
-									<select id="lstQuest2" size="10" style="min-width:100%" onchange="QuestionDataBinding(2)">
+									<select id="lstQuest2" size="16" style="min-width:100%" onchange="QuestionDataBinding(2)">
 										
 									</select>
 								</div>
 							</div>
-							<br><br><br><br><br><br><br><br><br><br>
+							<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
 							<div class="leftcolumn">
 								Left Statement: <textarea rows="4" id="txtLeft1" style="width:95%; resize:none;" readonly></textarea><br>
 								Right Statement: <textarea rows="4" id="txtRight1" style="width:95%; resize:none;" readonly></textarea>
@@ -183,8 +210,7 @@
 								Right Statement: <textarea rows="4" id="txtRight2" style="width:95%; resize:none;" readonly></textarea>
 							</div>
 						</fieldset>
-						<br>
-						<input type="submit" id="btnSubmit" value="Submit" style="width:100%; height:30px">
+						<input type="submit" id="btnSubmit" value="Submit" style="width:94%; height:40px; margin-left:15px; margin-top:5px;">
 					</div>
 				</div>
 			</form>
@@ -481,14 +507,21 @@
 			QuestionDataBinding(1);
 			
 			function ValidateForm() {
-				comp = document.getElementById('ddlCompany');
-				dept = document.getElementById('lstDept');
-				quest = document.getElementById('lstQuest2');
+				var comp = document.getElementById('ddlCompany'),
+					startDate = document.getElementById('dtpStart').value,
+					endDate = document.getElementById('dtpEnd').value,
+					start = new Date(startDate),
+					end = new Date(endDate),
+					dept = document.getElementById('lstDept');
 				
 				// If a company has not been selected, prompt for company.
+				// If the start date is after the end date, prompt for correction.
 				// If no departments have been added, prompt for departments.
 				if (comp.value == '0') {
 					alert("Please select a company.");
+					return false;
+				} else if (start.valueOf() >= end.valueOf()) {
+					alert("The start date must come before the end date.");
 					return false;
 				} else if (dept.length == 0) {
 					alert("Please add one or more departments.");
@@ -513,11 +546,16 @@
 					}
 				}
 				
+				var quest = document.getElementById('lstQuest2');
+				
 				// If a question has not been selected, prompt for questions.
 				if (quest.length == 0) {
 					alert("Please select one or more questions.");
 					return false;
 				}
+				
+				// Submit the survey to the database and generate emails.
+				Submit();
 				
 				// If form passes all criteria, return true.
 				return true;
@@ -539,6 +577,41 @@
 				
 				// If all emails are valid, return true.
 				return valid;
+			}
+			
+			function Submit() {
+				var CID = document.getElementById('ddlCompany').value;
+				var start = document.getElementById('dtpStart').value;
+				var end = document.getElementById('dtpEnd').value;
+				
+				var dArr = [];
+				var eArr = [];
+				var qArr = [];
+				
+				for (i = 0; i < deptArr.length; i++) {
+					dArr.push(deptArr[i].deptName);
+					eArr.push(deptArr[i].partEmail);
+				}
+				
+				for (i = 0; i < questArr2.length; i++) {
+					qArr.push(questArr2[i].ID);
+				}
+				
+				$.ajax({
+					type: "POST",
+					url: "submitsurvey.php",
+					data: 	{
+								CID: CID,
+								start: start,
+								end: end,
+								dArr: dArr,
+								eArr: eArr,
+								qArr: qArr
+							},
+					success: function() {
+						return true;
+					}
+				});
 			}
         </script>
 	</body>

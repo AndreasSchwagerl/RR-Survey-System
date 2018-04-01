@@ -113,12 +113,13 @@
 				<?php else :
 					// If POST was called, submit the survey
 					if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-						// Get the number of questions to loop through
-						$numQuestions = mysqli_fetch_object(mysqli_query($mysqli, "SELECT Count(*) AS C FROM SurveyQuestion s LEFT JOIN Question q ON s.QID = q.ID WHERE SID = $SID"))->C;
+						// Get the questions and question order
+						$result = mysqli_query($mysqli, "SELECT s.Order, s.QID FROM SurveyQuestion s WHERE s.SID = $SID ORDER BY s.Order");
+						$rowNum = mysqli_num_rows($result);
 						
-						// Create response entries in the database
-						for ($i = 1; $i <= $numQuestions; $i++) {
-							$insert = mysqli_query($mysqli, "INSERT INTO Response (DID, QID, Response) VALUES ('$DID', '$i', '" .(int)$_POST['sub' .$i]. "');");
+						// Loop through each question, submitting the responses to the database
+						while($row = mysqli_fetch_array($result)) {
+							$insert = mysqli_query($mysqli, "INSERT INTO Response (DID, QID, Response) VALUES ('$DID', '" .$row['QID']. "', '" .(int)$_POST['sub' .$row['Order']]. "');");
 						}
 						
 						// Update the participant entry; Submitted = TRUE
@@ -183,12 +184,12 @@
 											<tr>
 												<td><?php echo $row['Order']?></td>
 												<td><?php echo $row['QL']?></td>
-												<td><div align="center"><input type="radio" name="sub<?php echo $row['ID']; ?>" value=1 <?php if($_POST['sub' .$row['ID']] == 1) { echo 'checked="checked"';} ?>></div></td>
-												<td><div align="center"><input type="radio" name="sub<?php echo $row['ID']; ?>" value=2 <?php if($_POST['sub' .$row['ID']] == 2) { echo 'checked="checked"';} ?>></div></td>
-												<td><div align="center"><input type="radio" name="sub<?php echo $row['ID']; ?>" value=3 <?php if($_POST['sub' .$row['ID']] == 3) { echo 'checked="checked"';} ?>></div></td>
-												<td><div align="center"><input type="radio" name="sub<?php echo $row['ID']; ?>" value=4 <?php if($_POST['sub' .$row['ID']] == 4) { echo 'checked="checked"';} ?>></div></td>
-												<td><div align="center"><input type="radio" name="sub<?php echo $row['ID']; ?>" value=5 <?php if($_POST['sub' .$row['ID']] == 5) { echo 'checked="checked"';} ?>></div></td>
-												<td><div align="center"><input type="radio" name="sub<?php echo $row['ID']; ?>" value=6 <?php if($_POST['sub' .$row['ID']] == 6) { echo 'checked="checked"';} ?>></div></td>
+												<td><div align="center"><input type="radio" name="sub<?php echo $row['Order']; ?>" value=1 <?php if($_POST['sub' .$row['ID']] == 1) { echo 'checked="checked"';} ?>></div></td>
+												<td><div align="center"><input type="radio" name="sub<?php echo $row['Order']; ?>" value=2 <?php if($_POST['sub' .$row['ID']] == 2) { echo 'checked="checked"';} ?>></div></td>
+												<td><div align="center"><input type="radio" name="sub<?php echo $row['Order']; ?>" value=3 <?php if($_POST['sub' .$row['ID']] == 3) { echo 'checked="checked"';} ?>></div></td>
+												<td><div align="center"><input type="radio" name="sub<?php echo $row['Order']; ?>" value=4 <?php if($_POST['sub' .$row['ID']] == 4) { echo 'checked="checked"';} ?>></div></td>
+												<td><div align="center"><input type="radio" name="sub<?php echo $row['Order']; ?>" value=5 <?php if($_POST['sub' .$row['ID']] == 5) { echo 'checked="checked"';} ?>></div></td>
+												<td><div align="center"><input type="radio" name="sub<?php echo $row['Order']; ?>" value=6 <?php if($_POST['sub' .$row['ID']] == 6) { echo 'checked="checked"';} ?>></div></td>
 												<td><?php echo $row['QR']?></td>
 											</tr>
 										<?php
