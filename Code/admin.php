@@ -1,3 +1,5 @@
+<?php session_start(); ?>
+
 <html>
 	<head>
 		<style>
@@ -146,7 +148,15 @@
 			}
 		</style>
 	</head>
+	
 	<body>
+		<?php
+			if (empty($_SESSION['login'])) {
+				require 'login.php';
+				exit;
+			}
+		?>
+		
 		<div id ="navbar">
 			<div id ="holder" style="height: 65px">
 				<ul>
@@ -180,6 +190,8 @@
 				require 'adminquestion.php';
 			} else if ($state == "new_survey") {
 				require 'createsurvey.php';
+			} else {
+				echo '<script type="text/javascript">window.location = "admin.php?state=company"</script>';
 			}
 		?>
 	</body>

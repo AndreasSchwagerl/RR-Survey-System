@@ -62,7 +62,7 @@
 				// Get the Participant ID and email from POST
 				$PID = $_POST["ID"];
 				
-				$result = mysqli_query($mysqli, "SELECT p.email, s.EndDate FROM (Survey s INNER JOIN Department d ON s.ID = d.SID) INNER JOIN Participant p ON d.ID = p.DID WHERE p.ID = $PID");
+				$result = mysqli_query($mysqli, "SELECT p.email, s.EndDate FROM (Survey s INNER JOIN Department d ON s.ID = d.SID) INNER JOIN Participant p ON d.ID = p.DID WHERE p.ID = '$PID'");
 				
 				// Ensure that a participant exists, then send a reminder email
 				while($row = mysqli_fetch_array($result)) {
