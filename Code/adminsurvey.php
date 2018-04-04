@@ -181,6 +181,58 @@
 		});
 	}
 	
+	function GenerateReport(num) {
+		var comp = document.getElementById("CompletionRow"+num).innerHTML;
+		
+		// Prompt user for confirmation
+        if (comp.startsWith("0 out of ")) {
+            alert("Cannot generate a report for a survey with zero responses.");
+			return;
+        }
+
+        var request = new XMLHttpRequest();
+        request.open('POST', 'generatereport.php', true);
+        request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
+        request.responseType = 'blob';
+
+        request.onload = function() {
+            // Only handle status code 200
+            if(request.status === 200) {
+
+
+                // The actual download
+                var blob = new Blob([request.response], { type: 'application/vnd.ms-excel' });
+                var link = document.createElement('a');
+                link.href = window.URL.createObjectURL(blob);
+
+                document.body.appendChild(link);
+
+                link.click();
+
+                document.body.removeChild(link);
+            }
+
+            // some error handling should be done here...
+        };
+        request.send("ID="+num.toString());
+
+        //Previous Code Block
+        // Send the reminder emails
+        /*$.ajax({
+            type: "POST",
+            url: "generatereport.php",
+            data:   {
+                ID: num
+            },
+            success: function() {
+
+
+
+                return;
+            }
+        });*/
+	}
+	
 	function SendReminderEmails(num) {
         // Prompt user for confirmation
         if (!confirm('Send reminder emails to all participants of this survey who have not yet submitted?')) {
