@@ -79,6 +79,11 @@
 		resize();
 	};
 	
+	document.getElementById("wrap").addEventListener("scroll",function() {
+		var translate = "translate(0,"+this.scrollTop+"px)";
+		this.querySelector("thead").style.transform = translate;
+	});
+	
 	function EditRow(num) {
 		var start = document.getElementById("StartRow"+num);
 		var end = document.getElementById("EndRow"+num);
