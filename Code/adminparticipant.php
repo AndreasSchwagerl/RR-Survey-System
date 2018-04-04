@@ -73,6 +73,11 @@
 		resize();
 	};
 	
+	document.getElementById("wrap").addEventListener("scroll",function() {
+		var translate = "translate(0,"+this.scrollTop+"px)";
+		this.querySelector("thead").style.transform = translate;
+	});
+	
 	function EditRow(num) {
 		var email = document.getElementById("EmailRow"+num);
 		
