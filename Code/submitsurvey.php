@@ -12,9 +12,12 @@
 				return $ID;
 			}
 			
-			function GenerateEmailString($PID) {
+			function GenerateEmailString($PID, $comp, $end) {
 				$eml = parse_ini_file('../emailscript.ini');
-				$str = str_replace('[URL]', "http://www.rrsurvey.net/survey.php?ID=$PID", $eml['email']);
+				$str = $eml['email'];
+				$str = str_replace('[Company]', "$comp", $str);
+				$str = str_replace('[Date]', date("M jS", strtotime($end)), $str);
+				$str = str_replace('[URL]', "http://www.rrsurvey.net/survey.php?ID=$PID", $str);
 				
 				return $str;
 			}
@@ -22,12 +25,14 @@
 		<?php
 			// Get data from POST
 			//		CID: Company ID
+			//		comp: Company Name
 			//		start: Start Date
 			//		end: End Date
 			//		dArr: Department Array
 			//		eArr: Email Array
 			//		qArr: Question Array
 			$CID = $_POST["CID"];
+			$comp = $_POST["comp"];
 			$start = $_POST["start"];
 			$end = $_POST["end"];
 			$dArr = $_POST["dArr"];
@@ -40,6 +45,10 @@
 			$headers .= 'From: R&R Survey <do-not-reply@rrsurvey.net>' . "\r\n";
 			$headers .= 'Reply-To: <do-not-reply@rrsurvey.net>' . "\r\n";
 			$headers .= 'Return-Path: <do-not-reply@rrsurvey.net>' . "\r\n";
+			
+			// Get email subject
+			$eml = parse_ini_file('../emailscript.ini');
+			$subject = $eml['subject'];
 			
 			// Get database connection information
 			$dbhost = 'localhost';
@@ -77,7 +86,7 @@
 					$PID = GenerateRandomID(100); // Generate unique participant ID; 62^100, 1.73e^179 possibilities.
 					$insert = mysqli_query($mysqli, "INSERT INTO Participant (ID, DID, Email, Submitted) VALUES ('$PID', '$DID', '$email', 0);");
 					
-					mail($email, "Please Complete Survey By " .$end, GenerateEmailString($PID), $headers, "-fdo-not-reply@rrsurvey.net");
+					mail($email, $subject, GenerateEmailString($PID, $comp, $end), $headers, "-fdo-not-reply@rrsurvey.net");
 				}
 			}
 		?>

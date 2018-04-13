@@ -1,9 +1,12 @@
 <html>
 	<body>
 		<?php
-			function GenerateEmailString($PID) {
+			function GenerateReminderEmailString($PID, $comp, $end) {
 				$eml = parse_ini_file('../emailscript.ini');
-				$str = str_replace('[URL]', "http://www.rrsurvey.net/survey.php?ID=$PID", $eml['email']);
+				$str = $eml['reminderemail'];
+				$str = str_replace('[Company]', "$comp", $str);
+				$str = str_replace('[Date]', date("M jS", strtotime($end)), $str);
+				$str = str_replace('[URL]', "http://www.rrsurvey.net/survey.php?ID=$PID", $str);
 				
 				return $str;
 			}
@@ -22,6 +25,10 @@
 			//		level 1: Department
 			//		level 2: Participant
 			$level = $_POST["level"];
+			
+			// Get email subject
+			$eml = parse_ini_file('../emailscript.ini');
+			$subject = $eml['remindersubject'];
 			
 			// Get database connection information
 			$dbhost = 'localhost';
@@ -43,31 +50,31 @@
 				// Get the Survey ID from POST
 				$SID = $_POST["ID"];
 				
-				$result = mysqli_query($mysqli, "SELECT p.email, p.ID, s.EndDate FROM (Survey s INNER JOIN Department d ON s.ID = d.SID) INNER JOIN Participant p ON d.ID = p.DID WHERE s.ID = $SID AND p.Submitted = 0");
+				$result = mysqli_query($mysqli, "SELECT c.Name, p.email, p.ID, s.EndDate FROM ((Company c INNER JOIN Survey s ON c.ID = s.CID) INNER JOIN Department d ON s.ID = d.SID) INNER JOIN Participant p ON d.ID = p.DID WHERE s.ID = $SID AND p.Submitted = 0");
 				
 				// Loop through each participant, sending reminder emails
 				while($row = mysqli_fetch_array($result)) {
-					mail($row['email'], "REMINDER: Please Complete Survey By " .$row['EndDate'], GenerateReminderEmailString($row['ID']), $headers, "-fdo-not-reply@rrsurvey.net");
+					mail($row['email'], $subject, GenerateReminderEmailString($row['ID'], $row['Name'], $row['EndDate']), $headers, "-fdo-not-reply@rrsurvey.net");
 				}
 			} else if ($level == 1) {
 				// Get the Department ID from POST
 				$DID = $_POST["ID"];
 				
-				$result = mysqli_query($mysqli, "SELECT p.email, p.ID, s.EndDate FROM (Survey s INNER JOIN Department d ON s.ID = d.SID) INNER JOIN Participant p ON d.ID = p.DID WHERE d.ID = $DID AND p.Submitted = 0");
+				$result = mysqli_query($mysqli, "SELECT c.Name, p.email, p.ID, s.EndDate FROM ((Company c INNER JOIN Survey s ON c.ID = s.CID) INNER JOIN Department d ON s.ID = d.SID) INNER JOIN Participant p ON d.ID = p.DID WHERE d.ID = $DID AND p.Submitted = 0");
 				
 				// Loop through each participant, sending reminder emails
 				while($row = mysqli_fetch_array($result)) {
-					mail($row['email'], "REMINDER: Please Complete Survey By " .$row['EndDate'], GenerateReminderEmailString($row['ID']), $headers, "-fdo-not-reply@rrsurvey.net");
+					mail($row['email'], $subject, GenerateReminderEmailString($row['ID'], $row['Name'], $row['EndDate']), $headers, "-fdo-not-reply@rrsurvey.net");
 				}
 			} else if ($level == 2) {
 				// Get the Participant ID and email from POST
 				$PID = $_POST["ID"];
 				
-				$result = mysqli_query($mysqli, "SELECT p.email, s.EndDate FROM (Survey s INNER JOIN Department d ON s.ID = d.SID) INNER JOIN Participant p ON d.ID = p.DID WHERE p.ID = '$PID'");
+				$result = mysqli_query($mysqli, "SELECT c.Name, p.email, s.EndDate FROM ((Company c INNER JOIN Survey s ON c.ID = s.CID) INNER JOIN Department d ON s.ID = d.SID) INNER JOIN Participant p ON d.ID = p.DID WHERE p.ID = '$PID'");
 				
 				// Ensure that a participant exists, then send a reminder email
 				while($row = mysqli_fetch_array($result)) {
-					mail($row['email'], "REMINDER: Please Complete Survey By " .$row['EndDate'], GenerateReminderEmailString($PID), $headers, "-fdo-not-reply@rrsurvey.net");
+					mail($row['email'], $subject, GenerateReminderEmailString($PID, $row['Name'], $row['EndDate']), $headers, "-fdo-not-reply@rrsurvey.net");
 				}
 			}
 		?>

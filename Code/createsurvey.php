@@ -581,6 +581,7 @@
 			
 			function Submit() {
 				var CID = document.getElementById('ddlCompany').value;
+				var comp = document.getElementById('ddlCompany').options[document.getElementById('ddlCompany').selectedIndex].text;
 				var start = document.getElementById('dtpStart').value;
 				var end = document.getElementById('dtpEnd').value;
 				
@@ -602,6 +603,7 @@
 					url: "submitsurvey.php",
 					data: 	{
 								CID: CID,
+								comp: comp,
 								start: start,
 								end: end,
 								dArr: dArr,

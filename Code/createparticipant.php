@@ -9,9 +9,12 @@
 		return $ID;
 	}
 	
-	function GenerateEmailString($PID) {
+	function GenerateEmailString($PID, $comp, $end) {
 		$eml = parse_ini_file('../emailscript.ini');
-		$str = str_replace('[URL]', "http://www.rrsurvey.net/survey.php?ID=$PID", $eml['email']);
+		$str = $eml['email'];
+		$str = str_replace('[Company]', "$comp", $str);
+		$str = str_replace('[Date]', date("M jS", strtotime($end)), $str);
+		$str = str_replace('[URL]', "http://www.rrsurvey.net/survey.php?ID=$PID", $str);
 		
 		return $str;
 	}
@@ -26,6 +29,10 @@
 	$headers .= 'From: R&R Survey <do-not-reply@rrsurvey.net>' . "\r\n";
 	$headers .= 'Reply-To: <do-not-reply@rrsurvey.net>' . "\r\n";
 	$headers .= 'Return-Path: <do-not-reply@rrsurvey.net>' . "\r\n";
+	
+	// Get email subject
+	$eml = parse_ini_file('../emailscript.ini');
+	$subject = $eml['subject'];
 	
 	// Get database connection information
 	$dbhost = 'localhost';
@@ -43,7 +50,7 @@
 	// Get company name and survey end date
 	$results = mysqli_query($mysqli, "SELECT c.Name, s.EndDate FROM (Company c INNER JOIN Survey s ON c.ID = s.CID) INNER JOIN Department d ON s.ID = d.SID WHERE d.ID = $DID");
 	while($row = mysqli_fetch_array($results)) {
-		$company = $row['Name'];
+		$comp = $row['Name'];
 		$end = $row['EndDate'];
 	}
 	
@@ -52,7 +59,7 @@
 	$insert = mysqli_query($mysqli, "INSERT INTO Participant (ID, DID, Email, Submitted) VALUES ('$PID', '$DID', '$email', 0);");
 	
 	// Send out an email to the new participant
-	mail($email, "Please Complete Survey By " .$end, GenerateEmailString($PID), $headers, "-fdo-not-reply@rrsurvey.net");
+	mail($email, $subject, GenerateEmailString($PID, $comp, $end), $headers, "-fdo-not-reply@rrsurvey.net");
 	
 	// Return the generated Participant ID
 	echo $PID;
