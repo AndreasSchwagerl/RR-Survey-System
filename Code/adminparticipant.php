@@ -257,7 +257,7 @@
 				var tableLen = (table.rows.length)-1;
 				var row = table.insertRow(tableLen).outerHTML=""+
 					"<tr id='Row"+num+"'>"+
-						"<td id='IDRow"+num+"'>"+data+"</td>"+
+						"<td style='word-wrap: break-word; max-width: 350px;' id='IDRow"+num+"'>"+data+"</td>"+
 						"<td id='EmailRow"+num+"'>"+newEmail+"</td>"+
 						"<td id='SubmittedRow"+num+"'>0</td>"+
 						"<td class='btnGroup'>"+

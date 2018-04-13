@@ -10,7 +10,8 @@
 	}
 	
 	function GenerateEmailString($PID) {
-		$str = "<a href='http://www.rrsurvey.net/survey.php?ID=$PID'>Click Here</a>";
+		$eml = parse_ini_file('../emailscript.ini');
+		$str = str_replace('[URL]', "http://www.rrsurvey.net/survey.php?ID=$PID", $eml['email']);
 		
 		return $str;
 	}
