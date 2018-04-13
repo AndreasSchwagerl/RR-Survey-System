@@ -14,7 +14,7 @@
 		$login = parse_ini_file('login.ini');
 				
 		if ($_POST['user'] == $login['username'] && $_POST['pass'] == $login['password']) {
-			$_SESSION['login'] = $login['username'];
+			$_SESSION['login'] = $login['password'];
 			redirect('admin.php?state=company');
 			exit();
 		} else {

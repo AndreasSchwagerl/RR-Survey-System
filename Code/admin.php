@@ -149,7 +149,9 @@
 	
 	<body>
 		<?php
-			if (empty($_SESSION['login'])) {
+			$login = parse_ini_file('login.ini');
+			
+			if ($_SESSION['login'] == $login['password']) {
 				require '../login.php';
 				exit;
 			}

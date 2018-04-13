@@ -28,7 +28,7 @@
 	
 	// Get database connection information
 	$dbhost = 'localhost';
-	$dbconnect = parse_ini_file('connect.ini');
+	$dbconnect = parse_ini_file('../connect.ini');
 	
 	// Initiate mysqli connection
 	$mysqli = new mysqli($dbhost, $dbconnect['username'], $dbconnect['password'], $dbconnect['dbname']);

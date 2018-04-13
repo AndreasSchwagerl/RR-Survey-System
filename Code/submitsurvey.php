@@ -13,7 +13,8 @@
 			}
 			
 			function GenerateEmailString($PID) {
-				$str = "<a href='http://www.rrsurvey.net/survey.php?ID=$PID'>Click Here</a>";
+				$eml = parse_ini_file('../emailscript.ini');
+				$str = str_replace('[URL]', "http://www.rrsurvey.net/survey.php?ID=$PID", $eml['email']);
 				
 				return $str;
 			}
@@ -42,7 +43,7 @@
 			
 			// Get database connection information
 			$dbhost = 'localhost';
-			$dbconnect = parse_ini_file('connect.ini');
+			$dbconnect = parse_ini_file('../connect.ini');
 			
 			// Initiate mysqli connection
 			$mysqli = new mysqli($dbhost, $dbconnect['username'], $dbconnect['password'], $dbconnect['dbname']);
