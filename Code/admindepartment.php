@@ -1,6 +1,6 @@
 <?php
 	$dbhost = 'localhost';
-	$dbconnect = parse_ini_file('../connect.ini');
+	$dbconnect = parse_ini_file('connect.ini');
 	$mysqli = new mysqli($dbhost, $dbconnect['username'], $dbconnect['password'], $dbconnect['dbname']);
 	
 	if ($mysqli->connect_error) {

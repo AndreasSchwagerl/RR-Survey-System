@@ -11,7 +11,7 @@
 	
 	
 	if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-		$login = parse_ini_file('../login.ini');
+		$login = parse_ini_file('login.ini');
 				
 		if ($_POST['user'] == $login['username'] && $_POST['pass'] == $login['password']) {
 			$_SESSION['login'] = $login['username'];

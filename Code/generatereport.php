@@ -3,6 +3,7 @@
 
 $SID = $_POST["ID"];
 
+
 //include the file that loads the PhpSpreadsheet classes
 require '/home2/rrsurvey/public_html/vendor/autoload.php';
 
@@ -12,7 +13,7 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 // Get database connection information
 $dbhost = 'localhost';
-$dbconnect = parse_ini_file('../connect.ini');
+$dbconnect = parse_ini_file('connect.ini');
 
 // Initiate mysqli connection
 $mysqli = new mysqli($dbhost, $dbconnect['username'], $dbconnect['password'], $dbconnect['dbname']);
@@ -59,10 +60,12 @@ if ($responses->num_rows > 0) {
 
 mysqli_close($mysqli);
 
+//Decode JSON objects
 $questionJSON=json_decode(json_encode($questionArray),true);
 $responseJSON=json_decode(json_encode($responseArray),true);
 
 
+//Set Left and Right Question Arrays
 $newArr=array();
 $newArr2=array();
 $lqArray=array();
@@ -95,6 +98,7 @@ foreach($newArr as $key => $value){
     $i++;
 }
 
+//Column markers map to cells
 $colMarker=array('B','C','D','E','F','G');
 
 //create new spreadsheet
@@ -102,12 +106,30 @@ $spreadsheet = new Spreadsheet();
 
 fillHeaders($lqArray,$rqArray,$spreadsheet);
 
-//Set first sheet to first department encountered
-$spreadsheet->getActiveSheet()->setTitle(strtok($newArr2[0],','));
+//Set first worksheet name to All and get all results
+$spreadsheet->getActiveSheet()->setTitle("All");
+fillHeaders($lqArray,$rqArray,$spreadsheet);
+
+foreach($newArr2 as $data => $val) {
+    $strSplit=explode(",",$val);  //Split up each response block separated by commas
+    $spreadsheet->getActiveSheet()
+
+        ->setCellValue($colMarker[($strSplit[2]-1)].($strSplit[1]+1),
+            $spreadsheet->getActiveSheet()->getCell($colMarker[($strSplit[2]-1)].($strSplit[1]+1))->getValue()+1 ) //Increment the matching response cell by 1
+    ;
+}
+
+
+//Set second sheet to first department encountered
+$newWorkSheet = new \PhpOffice\PhpSpreadsheet\Worksheet\Worksheet($spreadsheet, strtok($newArr2[0],','));
+$spreadsheet->addSheet($newWorkSheet);
+$spreadsheet->setActiveSheetIndexByName(strtok($newArr2[0],','));
+fillHeaders($lqArray,$rqArray,$spreadsheet);
 
 
 
-//Populate Cells
+
+//Populate Department Sheets
 foreach($newArr2 as $data => $val) {
     $strSplit=explode(",",$val);  //Split up each response block separated by commas
 
@@ -130,8 +152,46 @@ foreach($newArr2 as $data => $val) {
 
 }
 
+//Style each sheet and calculate the row averages
+for($x=0;$x<$spreadsheet->getSheetCount();$x++){
+    $spreadsheet->setActiveSheetIndex($x);
+    $dataArray = $spreadsheet->getActiveSheet()
+        ->rangeToArray(
+            'B2:G'.(sizeof($rqArray)+1),     // The worksheet range that we want to retrieve
+            NULL,        // Value that should be returned for empty cells
+            TRUE,        // Should formulas be calculated (the equivalent of getCalculatedValue() for each cell)
+            TRUE,        // Should values be formatted (the equivalent of getFormattedValue() for each cell)
+            FALSE         // Should the array be indexed by cell row and cell column
+        );
+    $numRespond=$dataArray[0][0]+$dataArray[0][1]+$dataArray[0][2]+$dataArray[0][3]+$dataArray[0][4]+$dataArray[0][5];
+    for($i=0; $i < sizeof($dataArray); $i++) {
+
+        for($y=0;$y<6;$y++){
+            if(is_null($dataArray[$i][$y])){
+                $spreadsheet->getActiveSheet()
+
+                    ->setCellValue($colMarker[($y)].($i+2),
+                        0) //Increment the matching response cell by 1
+                ;
+            }
+        }
+
+
+        $average=(($dataArray[$i][0]*1)+($dataArray[$i][1]*2)+($dataArray[$i][2]*3)+
+                ($dataArray[$i][3]*4)+($dataArray[$i][4]*5)+($dataArray[$i][5]*6))/$numRespond;
+        $average=number_format((float)$average, 2, '.', '');
+
+        $spreadsheet->getActiveSheet()
+
+            ->setCellValue('I'.($i+2),$average)
+        ;
+    }
+
+}
+
+
 //Function fills out headers and generates the question rows, also formats the column width and style
-function fillHeaders($arr1,$arr2, $spreadsheet){
+    function fillHeaders($arr1,$arr2, $spreadsheet){
 
     //Set Headers
     $lqColArray = array_chunk($arr1, 1);
@@ -146,6 +206,7 @@ function fillHeaders($arr1,$arr2, $spreadsheet){
         ->setCellValue('F1', '5 (Mostly Agree')
         ->setCellValue('G1', '5 (Fully Agree')
         ->setCellValue('H1', 'Right Question')
+        ->setCellValue('I1', 'Average Response')
     ;
 
     //Write questions to cells
@@ -165,17 +226,21 @@ function fillHeaders($arr1,$arr2, $spreadsheet){
         );
 }
 
+function getAverage($cellArray){
 
+}
+
+
+$spreadsheet->setActiveSheetIndex(0);
 //make object of the Xlsx class to save the excel file
-$writer = new Xlsx($spreadsheet);
-$fxls ='surveyreport.xlsx';
+$writer = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($spreadsheet, 'Xls');
 
 // We'll be outputting an excel file
 header('Content-type: application/vnd.ms-excel');
-
-// It will be called file.xls
-header('Content-Disposition: attachment; filename="report.xlsx"');
+$surveyName="Survey".$SID;
+//Define attachment
+header('Content-Disposition: attachment; filename="'.$surveyName);
 
 // Write file to the browser
-$writer->save('php://output');
+$writer->save('php://output','xls');
 ?>

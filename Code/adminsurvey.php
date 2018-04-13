@@ -1,6 +1,6 @@
 <?php
 	$dbhost = 'localhost';
-	$dbconnect = parse_ini_file('../connect.ini');
+	$dbconnect = parse_ini_file('connect.ini');
 	$mysqli = new mysqli($dbhost, $dbconnect['username'], $dbconnect['password'], $dbconnect['dbname']);
 	
 	if ($mysqli->connect_error) {
@@ -78,11 +78,6 @@
 	window.onresize = function() {
 		resize();
 	};
-	
-	document.getElementById("wrap").addEventListener("scroll",function() {
-		var translate = "translate(0,"+this.scrollTop+"px)";
-		this.querySelector("thead").style.transform = translate;
-	});
 	
 	function EditRow(num) {
 		var start = document.getElementById("StartRow"+num);
@@ -209,7 +204,7 @@
                 var blob = new Blob([request.response], { type: 'application/vnd.ms-excel' });
                 var link = document.createElement('a');
                 link.href = window.URL.createObjectURL(blob);
-
+                link.download = "Survey"+num;
                 document.body.appendChild(link);
 
                 link.click();
@@ -220,22 +215,6 @@
             // some error handling should be done here...
         };
         request.send("ID="+num.toString());
-
-        //Previous Code Block
-        // Send the reminder emails
-        /*$.ajax({
-            type: "POST",
-            url: "generatereport.php",
-            data:   {
-                ID: num
-            },
-            success: function() {
-
-
-
-                return;
-            }
-        });*/
 	}
 	
 	function SendReminderEmails(num) {
