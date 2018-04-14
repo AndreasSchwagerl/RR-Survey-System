@@ -50,7 +50,7 @@
 				<td><input type="text" placeholder="Enter Question ID" id="NewID"></td>
 				<td><input type="text" placeholder="Enter Left Statement" id="NewQL"></td>
 				<td><input type="text" placeholder="Enter Right Statement" id="NewQR"></td>
-				<td><div align="center"><input type="button" class="btn" id="AddButton" value="Add Company" onClick="AddRow()"></div></td>
+				<td><div align="center"><input type="button" class="btn" id="AddButton" value="Add Question" onClick="AddRow()"></div></td>
 			</tr>
 		</tbody>
 	</table>
