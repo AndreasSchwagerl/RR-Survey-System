@@ -10,6 +10,13 @@ require '/home2/rrsurvey/public_html/vendor/autoload.php';
 //include the classes needed to create and write .xlsx file
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Chart\Chart;
+use PhpOffice\PhpSpreadsheet\Chart\DataSeries;
+use PhpOffice\PhpSpreadsheet\Chart\DataSeriesValues;
+use PhpOffice\PhpSpreadsheet\Chart\Legend;
+use PhpOffice\PhpSpreadsheet\Chart\PlotArea;
+use PhpOffice\PhpSpreadsheet\Chart\Title;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 
 // Get database connection information
 $dbhost = 'localhost';
@@ -35,9 +42,7 @@ WHERE s.ID = $SID");
 
 $questionArray = array();
 $responseArray=array();
-$lqArray=array();
-$rqArray=array();
-$count=0;
+
 
 
 if ($questions->num_rows > 0) {
@@ -65,182 +70,286 @@ $questionJSON=json_decode(json_encode($questionArray),true);
 $responseJSON=json_decode(json_encode($responseArray),true);
 
 
-//Set Left and Right Question Arrays
-$newArr=array();
-$newArr2=array();
-$lqArray=array();
-$rqArray=array();
-
-foreach($questionJSON as $data => $val) {
-    foreach ($val as $key2 => $val2) {
-        $newArr[] = $val2;
-
-    }
-}
-
-foreach($responseJSON as $data => $val) {
-    $strBuild="";
-    foreach ($val as $key2 => $val2) {
-        $strBuild = $strBuild.$val2.',';
-    }
-    $strBuild=substr($strBuild,0,-1);
-    $newArr2[]=$strBuild;
-}
-
-
-$i = 0;
-foreach($newArr as $key => $value){
-    if($i%2 == 0){
-        $lqArray[$key] = $value;
-    }else{
-        $rqArray[$key] = $value;
-    }
-    $i++;
-}
-
 //Column markers map to cells
 $colMarker=array('B','C','D','E','F','G');
 
-//create new spreadsheet
+//Create new spreadsheet
 $spreadsheet = new Spreadsheet();
+$spreadsheet->getActiveSheet()->setTitle('All');
+//Create Headers
+$headers=array("Left Question","1 (Fully Agree)","2 (Mostly Agree)","3 (Partly Agree)","4 (Partly Agree)","5 (Mostly Agree","6 (Fully Agree)","Right Question","AVG");
+//Create array to hold spreadsheet data
+$dataArray=array();
+$deptArray=array('All');
 
-fillHeaders($lqArray,$rqArray,$spreadsheet);
+array_push($dataArray,$headers);
+for($i=0;$i<sizeof($questionJSON);$i++){
+    $placeholder=array('Question '.($i+1),0,0,0,0,0,0,'Question '.($i+1),0);
 
-//Set first worksheet name to All and get all results
-$spreadsheet->getActiveSheet()->setTitle("All");
-fillHeaders($lqArray,$rqArray,$spreadsheet);
+    for($x=0;$x<sizeof($responseJSON);$x++){
+        if($responseJSON[$x]["Order"]==($i)+1){
+            $index=$responseJSON[$x]["Response"];
+            $placeholder[$index]+=1;
+        }
 
-foreach($newArr2 as $data => $val) {
-    $strSplit=explode(",",$val);  //Split up each response block separated by commas
-    $spreadsheet->getActiveSheet()
+        //Build department list on first pass
+        $dept=str_replace(' ','',$responseJSON[$x]["Name"]);
 
-        ->setCellValue($colMarker[($strSplit[2]-1)].($strSplit[1]+1),
-            $spreadsheet->getActiveSheet()->getCell($colMarker[($strSplit[2]-1)].($strSplit[1]+1))->getValue()+1 ) //Increment the matching response cell by 1
-    ;
-}
+        if(in_array($dept,$deptArray)==false){
+            array_push($deptArray,$dept);
+        }
 
-
-//Set second sheet to first department encountered
-$newWorkSheet = new \PhpOffice\PhpSpreadsheet\Worksheet\Worksheet($spreadsheet, strtok($newArr2[0],','));
-$spreadsheet->addSheet($newWorkSheet);
-$spreadsheet->setActiveSheetIndexByName(strtok($newArr2[0],','));
-fillHeaders($lqArray,$rqArray,$spreadsheet);
-
-
-
-
-//Populate Department Sheets
-foreach($newArr2 as $data => $val) {
-    $strSplit=explode(",",$val);  //Split up each response block separated by commas
-
-    if (is_null($spreadsheet->getSheetByName($strSplit[0]))){   //If department name doesn't have an associated sheet, create a new one and set as active
-        $newWorkSheet = new \PhpOffice\PhpSpreadsheet\Worksheet\Worksheet($spreadsheet, $strSplit[0]);
-        $spreadsheet->addSheet($newWorkSheet);
-        $spreadsheet->setActiveSheetIndexByName($strSplit[0]);
-        fillHeaders($lqArray,$rqArray,$spreadsheet);
-    }
-    else{
-        $spreadsheet->setActiveSheetIndexByName($strSplit[0]);
     }
 
 
-    $spreadsheet->getActiveSheet()
+    $average=(($placeholder[1]*1)+($placeholder[2]*2)+($placeholder[3]*3)+
+        ($placeholder[4]*4)+($placeholder[5]*5+($placeholder[6]*6)))/(array_sum($placeholder));
+    $average=number_format((float)$average, 2, '.', '');
 
-        ->setCellValue($colMarker[($strSplit[2]-1)].($strSplit[1]+1),
-            $spreadsheet->getActiveSheet()->getCell($colMarker[($strSplit[2]-1)].($strSplit[1]+1))->getValue()+1 ) //Increment the matching response cell by 1
-    ;
-
+    $placeholder[8]=$average;
+    array_push($dataArray,$placeholder);
 }
 
-//Style each sheet and calculate the row averages
-for($x=0;$x<$spreadsheet->getSheetCount();$x++){
-    $spreadsheet->setActiveSheetIndex($x);
-    $dataArray = $spreadsheet->getActiveSheet()
-        ->rangeToArray(
-            'B2:G'.(sizeof($rqArray)+1),     // The worksheet range that we want to retrieve
-            NULL,        // Value that should be returned for empty cells
-            TRUE,        // Should formulas be calculated (the equivalent of getCalculatedValue() for each cell)
-            TRUE,        // Should values be formatted (the equivalent of getFormattedValue() for each cell)
-            FALSE         // Should the array be indexed by cell row and cell column
-        );
-    $numRespond=$dataArray[0][0]+$dataArray[0][1]+$dataArray[0][2]+$dataArray[0][3]+$dataArray[0][4]+$dataArray[0][5];
-    for($i=0; $i < sizeof($dataArray); $i++) {
+$spreadsheet->setActiveSheetIndex(0);
+$worksheet = $spreadsheet->getActiveSheet();
+$worksheet->fromArray($dataArray);
 
-        for($y=0;$y<6;$y++){
-            if(is_null($dataArray[$i][$y])){
-                $spreadsheet->getActiveSheet()
+$sheetTitle=''.$deptArray[0];
+$dataSeriesLabels = [
+    new \PhpOffice\PhpSpreadsheet\Chart\DataSeriesValues('String', $sheetTitle.'!$B$1', null, 1),
+    new \PhpOffice\PhpSpreadsheet\Chart\DataSeriesValues('String', $sheetTitle.'!$C$1', null, 1),
+    new \PhpOffice\PhpSpreadsheet\Chart\DataSeriesValues('String', $sheetTitle.'!$D$1', null, 1),
+    new \PhpOffice\PhpSpreadsheet\Chart\DataSeriesValues('String', $sheetTitle.'!$E$1', null, 1),
+    new \PhpOffice\PhpSpreadsheet\Chart\DataSeriesValues('String', $sheetTitle.'!$F$1', null, 1),
+    new \PhpOffice\PhpSpreadsheet\Chart\DataSeriesValues('String', $sheetTitle.'!$G$1', null, 1),
+];
 
-                    ->setCellValue($colMarker[($y)].($i+2),
-                        0) //Increment the matching response cell by 1
-                ;
+
+
+$len=''.(sizeof($questionJSON))+1;
+$xAxisTickValues = [
+    new \PhpOffice\PhpSpreadsheet\Chart\DataSeriesValues('String', $sheetTitle.'!$A$2:$A$'.$len, null, $len),	//	Q1 to Q4
+];
+
+
+
+$dataSeriesValues = [
+    new \PhpOffice\PhpSpreadsheet\Chart\DataSeriesValues('Number', $sheetTitle.'!$B$2:$B$'.$len, null, $len),
+    new \PhpOffice\PhpSpreadsheet\Chart\DataSeriesValues('Number', $sheetTitle.'!$C$2:$C$'.$len, null, $len),
+    new \PhpOffice\PhpSpreadsheet\Chart\DataSeriesValues('Number', $sheetTitle.'!$D$2:$D$'.$len, null, $len),
+    new \PhpOffice\PhpSpreadsheet\Chart\DataSeriesValues('Number', $sheetTitle.'!$E$2:$E$'.$len, null, $len),
+    new \PhpOffice\PhpSpreadsheet\Chart\DataSeriesValues('Number', $sheetTitle.'!$F$2:$F$'.$len, null, $len),
+    new \PhpOffice\PhpSpreadsheet\Chart\DataSeriesValues('Number', $sheetTitle.'!$G$2:$G$'.$len, null, $len),
+];
+
+
+
+
+
+$series = new DataSeries(
+    \PhpOffice\PhpSpreadsheet\Chart\DataSeries::TYPE_BARCHART,		// plotType
+    \PhpOffice\PhpSpreadsheet\Chart\DataSeries::GROUPING_STACKED,	// plotGrouping
+    range(0, count($dataSeriesValues)-1),			// plotOrder
+    $dataSeriesLabels,								// plotLabel
+    $xAxisTickValues,								// plotCategory
+    $dataSeriesValues								// plotValues
+);
+
+//  Set up a layout object for the Pie chart
+$layout = new \PhpOffice\PhpSpreadsheet\Chart\Layout();
+$layout->setShowVal(true);
+$layout->setShowPercent(true);
+
+//  Set the series in the plot area
+$plotArea = new \PhpOffice\PhpSpreadsheet\Chart\PlotArea($layout, [$series]);
+//  Set the chart legend
+$legend = new \PhpOffice\PhpSpreadsheet\Chart\Legend(\PhpOffice\PhpSpreadsheet\Chart\Legend::POSITION_RIGHT, null, false);
+
+$title = new \PhpOffice\PhpSpreadsheet\Chart\Title('Total Results');
+
+//  Create the chart
+$chart = new Chart(
+    'chart', // name
+    $title, // title
+    $legend, // legend
+    $plotArea, // plotArea
+    true, // plotVisibleOnly
+    0, // displayBlanksAs
+    null, // xAxisLabel
+    null   // yAxisLabel    - Pie charts don't have a Y-Axis
+);
+
+//Set the position where the chart should appear in the worksheet
+//Set dynamic width
+$colNum=$len+2;
+while ($colNum!= 0) {
+    $colNum--;
+    $sb=$sb.chr(ord('A')+($colNum % 26));
+    $colNum /=26;
+    $colNum=floor($colNum);
+}
+
+$widthMarker= ''.strrev($sb);
+$chart->setTopLeftPosition('K2');
+$chart->setBottomRightPosition($widthMarker.'23');
+
+//Add the chart to the worksheet
+$worksheet->addChart($chart);
+
+$cell_st =[
+    'alignment' =>['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER],
+    'borders'=>['bottom' =>['style'=> \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_MEDIUM]]
+];
+$spreadsheet->getActiveSheet()->getStyle('B1:I'.((sizeof($responseArray))+1))->applyFromArray($cell_st);
+$spreadsheet->getActiveSheet()->getColumnDimension('A')->setWidth(20);
+$spreadsheet->getActiveSheet()->getColumnDimension('B')->setWidth(15);
+$spreadsheet->getActiveSheet()->getColumnDimension('C')->setWidth(15);
+$spreadsheet->getActiveSheet()->getColumnDimension('D')->setWidth(15);
+$spreadsheet->getActiveSheet()->getColumnDimension('E')->setWidth(15);
+$spreadsheet->getActiveSheet()->getColumnDimension('F')->setWidth(15);
+$spreadsheet->getActiveSheet()->getColumnDimension('G')->setWidth(15);
+$spreadsheet->getActiveSheet()->getColumnDimension('H')->setWidth(20);
+$spreadsheet->getActiveSheet()->getColumnDimension('I')->setWidth(15);
+
+
+for($z=1;$z<sizeof($deptArray);$z++){
+
+    
+    $dataArray=array();
+    //Set Department sheets
+    $newWorkSheet = new \PhpOffice\PhpSpreadsheet\Worksheet\Worksheet($spreadsheet, $deptArray[$z]);
+    $spreadsheet->addSheet($newWorkSheet);
+    $spreadsheet->setActiveSheetIndexByName($deptArray[$z]);
+
+    $dataArray=array();
+    array_push($dataArray,$headers);
+
+    for($i=0;$i<sizeof($questionJSON);$i++){
+        $placeholder=array('Question '.($i+1),0,0,0,0,0,0,'Question '.($i+1),0);
+
+        for($x=0;$x<sizeof($responseJSON);$x++){
+            $name=str_replace(' ','',$responseJSON[$x]["Name"]);
+            if($name==$deptArray[$z]){
+                if($responseJSON[$x]["Order"]==($i)+1){
+                    $index=$responseJSON[$x]["Response"];
+                    $placeholder[$index]+=1;
+                }
             }
         }
 
 
-        $average=(($dataArray[$i][0]*1)+($dataArray[$i][1]*2)+($dataArray[$i][2]*3)+
-                ($dataArray[$i][3]*4)+($dataArray[$i][4]*5)+($dataArray[$i][5]*6))/$numRespond;
+        $average=(($placeholder[1]*1)+($placeholder[2]*2)+($placeholder[3]*3)+
+            ($placeholder[4]*4)+($placeholder[5]*5+($placeholder[6]*6)))/(array_sum($placeholder));
         $average=number_format((float)$average, 2, '.', '');
 
-        $spreadsheet->getActiveSheet()
+        $placeholder[8]=$average;
+        array_push($dataArray,$placeholder);
 
-            ->setCellValue('I'.($i+2),$average)
-        ;
-    }
 
 }
 
+$worksheet = $spreadsheet->getActiveSheet();
+$worksheet->fromArray($dataArray);
+$sheetTitle=''.$deptArray[$z];
 
-//Function fills out headers and generates the question rows, also formats the column width and style
-    function fillHeaders($arr1,$arr2, $spreadsheet){
+$dataSeriesLabels = [
+    new \PhpOffice\PhpSpreadsheet\Chart\DataSeriesValues('String', $sheetTitle.'!$B$1', null, 1),
+    new \PhpOffice\PhpSpreadsheet\Chart\DataSeriesValues('String', $sheetTitle.'!$C$1', null, 1),
+    new \PhpOffice\PhpSpreadsheet\Chart\DataSeriesValues('String', $sheetTitle.'!$D$1', null, 1),
+    new \PhpOffice\PhpSpreadsheet\Chart\DataSeriesValues('String', $sheetTitle.'!$E$1', null, 1),
+    new \PhpOffice\PhpSpreadsheet\Chart\DataSeriesValues('String', $sheetTitle.'!$F$1', null, 1),
+    new \PhpOffice\PhpSpreadsheet\Chart\DataSeriesValues('String', $sheetTitle.'!$G$1', null, 1),
+];
 
-    //Set Headers
-    $lqColArray = array_chunk($arr1, 1);
-    $rqColArray = array_chunk($arr2, 1);
 
-    $spreadsheet->getActiveSheet()
-        ->setCellValue('A1', 'Left Question')
-        ->setCellValue('B1', '1 (Fully Agree)')
-        ->setCellValue('C1', '2 (Mostly Agree')
-        ->setCellValue('D1', '3 (Partly Agree')
-        ->setCellValue('E1', '4 (Partly Agree')
-        ->setCellValue('F1', '5 (Mostly Agree')
-        ->setCellValue('G1', '5 (Fully Agree')
-        ->setCellValue('H1', 'Right Question')
-        ->setCellValue('I1', 'Average Response')
-    ;
 
-    //Write questions to cells
-    $spreadsheet->getActiveSheet()
-        ->fromArray(
-            $lqColArray,   // The data to set
-            NULL,           // Array values with this value will not be set
-            'A2'            // Top left coordinate of the worksheet range where
-        //    we want to set these values (default is A1)
-        );
-    $spreadsheet->getActiveSheet()
-        ->fromArray(
-            $rqColArray,   // The data to set
-            NULL,           // Array values with this value will not be set
-            'H2'            // Top left coordinate of the worksheet range where
-        //    we want to set these values (default is A1)
-        );
+$len=''.(sizeof($questionJSON))+1;
+$xAxisTickValues = [
+    new \PhpOffice\PhpSpreadsheet\Chart\DataSeriesValues('String', $sheetTitle.'!$A$2:$A$'.$len, null, $len),	//	Q1 to Q4
+];
+
+
+
+$dataSeriesValues = [
+    new \PhpOffice\PhpSpreadsheet\Chart\DataSeriesValues('Number', $sheetTitle.'!$B$2:$B$'.$len, null, $len),
+    new \PhpOffice\PhpSpreadsheet\Chart\DataSeriesValues('Number', $sheetTitle.'!$C$2:$C$'.$len, null, $len),
+    new \PhpOffice\PhpSpreadsheet\Chart\DataSeriesValues('Number', $sheetTitle.'!$D$2:$D$'.$len, null, $len),
+    new \PhpOffice\PhpSpreadsheet\Chart\DataSeriesValues('Number', $sheetTitle.'!$E$2:$E$'.$len, null, $len),
+    new \PhpOffice\PhpSpreadsheet\Chart\DataSeriesValues('Number', $sheetTitle.'!$F$2:$F$'.$len, null, $len),
+    new \PhpOffice\PhpSpreadsheet\Chart\DataSeriesValues('Number', $sheetTitle.'!$G$2:$G$'.$len, null, $len),
+];
+
+
+
+
+
+$series = new DataSeries(
+    \PhpOffice\PhpSpreadsheet\Chart\DataSeries::TYPE_BARCHART,		// plotType
+    \PhpOffice\PhpSpreadsheet\Chart\DataSeries::GROUPING_STACKED,	// plotGrouping
+    range(0, count($dataSeriesValues)-1),			// plotOrder
+    $dataSeriesLabels,								// plotLabel
+    $xAxisTickValues,								// plotCategory
+    $dataSeriesValues								// plotValues
+);
+
+//  Set up a layout object for the Pie chart
+$layout = new \PhpOffice\PhpSpreadsheet\Chart\Layout();
+$layout->setShowVal(true);
+$layout->setShowPercent(true);
+
+//  Set the series in the plot area
+$plotArea = new \PhpOffice\PhpSpreadsheet\Chart\PlotArea($layout, [$series]);
+//  Set the chart legend
+$legend = new \PhpOffice\PhpSpreadsheet\Chart\Legend(\PhpOffice\PhpSpreadsheet\Chart\Legend::POSITION_RIGHT, null, false);
+
+$title = new \PhpOffice\PhpSpreadsheet\Chart\Title(''.$sheetTitle.' Results');
+
+//  Create the chart
+$chart = new Chart(
+    'chart', // name
+    $title, // title
+    $legend, // legend
+    $plotArea, // plotArea
+    true, // plotVisibleOnly
+    0, // displayBlanksAs
+    null, // xAxisLabel
+    null   // yAxisLabel    - Pie charts don't have a Y-Axis
+);
+
+//Set the position where the chart should appear in the worksheet
+//Get width of questions
+
+
+$chart->setTopLeftPosition('K2');
+$chart->setBottomRightPosition($widthMarker.'23');
+
+//Add the chart to the worksheet
+$worksheet->addChart($chart);
+
+//Style Sheet
+$cell_st =[
+    'alignment' =>['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER],
+    'borders'=>['bottom' =>['style'=> \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_MEDIUM]]
+];
+$spreadsheet->getActiveSheet()->getStyle('B1:I'.((sizeof($responseArray))+1))->applyFromArray($cell_st);
+$spreadsheet->getActiveSheet()->getColumnDimension('A')->setWidth(20);
+$spreadsheet->getActiveSheet()->getColumnDimension('B')->setWidth(15);
+$spreadsheet->getActiveSheet()->getColumnDimension('C')->setWidth(15);
+$spreadsheet->getActiveSheet()->getColumnDimension('D')->setWidth(15);
+$spreadsheet->getActiveSheet()->getColumnDimension('E')->setWidth(15);
+$spreadsheet->getActiveSheet()->getColumnDimension('F')->setWidth(15);
+$spreadsheet->getActiveSheet()->getColumnDimension('G')->setWidth(15);
+$spreadsheet->getActiveSheet()->getColumnDimension('H')->setWidth(20);
+$spreadsheet->getActiveSheet()->getColumnDimension('I')->setWidth(15);
+
 }
-
-function getAverage($cellArray){
-
-}
-
 
 $spreadsheet->setActiveSheetIndex(0);
-//make object of the Xlsx class to save the excel file
-$writer = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($spreadsheet, 'Xls');
 
-// We'll be outputting an excel file
-header('Content-type: application/vnd.ms-excel');
-$surveyName="Survey".$SID;
-//Define attachment
-header('Content-Disposition: attachment; filename="'.$surveyName);
+$writer = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($spreadsheet, 'Xlsx');
+$writer->setIncludeCharts(true);
+header("Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+header("Content-Disposition: attachment; filename=abc.xlsx");
+$writer->save('php://output','Xlsx');
 
-// Write file to the browser
-$writer->save('php://output','xls');
 ?>

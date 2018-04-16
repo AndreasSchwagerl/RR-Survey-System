@@ -201,7 +201,7 @@
 
 
                 // The actual download
-                var blob = new Blob([request.response], { type: 'application/vnd.ms-excel' });
+                var blob = new Blob([request.response], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
                 var link = document.createElement('a');
                 link.href = window.URL.createObjectURL(blob);
                 link.download = "Survey"+num;
