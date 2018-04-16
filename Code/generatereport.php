@@ -77,7 +77,7 @@ $colMarker=array('B','C','D','E','F','G');
 $spreadsheet = new Spreadsheet();
 $spreadsheet->getActiveSheet()->setTitle('All');
 //Create Headers
-$headers=array("Left Question","1 (Fully Agree)","2 (Mostly Agree)","3 (Partly Agree)","4 (Partly Agree)","5 (Mostly Agree","6 (Fully Agree)","Right Question","AVG");
+$headers=array("Question","1 (Fully Agree)","2 (Mostly Agree)","3 (Partly Agree)","4 (Partly Agree)","5 (Mostly Agree","6 (Fully Agree)","AVG");
 //Create array to hold spreadsheet data
 $dataArray=array();
 $deptArray=array('All');
@@ -106,13 +106,39 @@ for($i=0;$i<sizeof($questionJSON);$i++){
         ($placeholder[4]*4)+($placeholder[5]*5+($placeholder[6]*6)))/(array_sum($placeholder));
     $average=number_format((float)$average, 2, '.', '');
 
-    $placeholder[8]=$average;
+    $placeholder[7]=$average;
     array_push($dataArray,$placeholder);
+}
+
+for($i=0;$i<sizeof($questionJSON);$i++){
+    $spreadsheet->getActiveSheet()
+    ->getComment('A'.($i+2))
+    ->getText()->createTextRun('Left Question:'."\r\n"."\r\n");
+    $spreadsheet->getActiveSheet()
+    ->getComment('A'.($i+2))
+    ->getText()->createTextRun(''.$questionJSON[$i]["QL"]."\r\n"."\r\n");
+    $spreadsheet->getActiveSheet()
+    ->getComment('A'.($i+2))
+    ->getText()->createTextRun('Right Question:'."\r\n"."\r\n");
+    $spreadsheet->getActiveSheet()
+    ->getComment('A'.($i+2))
+    ->getText()->createTextRun(''.$questionJSON[$i]["QR"]);
+    $spreadsheet->getActiveSheet()
+    ->getComment('A'.($i+2))
+    ->setHeight(250);
+    $spreadsheet->getActiveSheet()
+    ->getComment('A'.($i+2))
+    ->setWidth(300);
 }
 
 $spreadsheet->setActiveSheetIndex(0);
 $worksheet = $spreadsheet->getActiveSheet();
 $worksheet->fromArray($dataArray);
+
+$spreadsheet->getActiveSheet()
+    ->setCellValue('B3',1);
+;
+
 
 $sheetTitle=''.$deptArray[0];
 $dataSeriesLabels = [
@@ -127,6 +153,7 @@ $dataSeriesLabels = [
 
 
 $len=''.(sizeof($questionJSON))+1;
+
 $xAxisTickValues = [
     new \PhpOffice\PhpSpreadsheet\Chart\DataSeriesValues('String', $sheetTitle.'!$A$2:$A$'.$len, null, $len),	//	Q1 to Q4
 ];
@@ -181,18 +208,23 @@ $chart = new Chart(
 
 //Set the position where the chart should appear in the worksheet
 //Set dynamic width
-$colNum=$len+2;
-while ($colNum!= 0) {
-    $colNum--;
-    $sb=$sb.chr(ord('A')+($colNum % 26));
-    $colNum /=26;
-    $colNum=floor($colNum);
+$widthMarker='Q';
+if($len>15){
+    $colNum=$len+5;
+    while ($colNum!= 0) {
+        $colNum--;
+        $sb=$sb.chr(ord('A')+($colNum % 26));
+        $colNum /=26;
+        $colNum=floor($colNum);
+}
+    $widthMarker= ''.strrev($sb);
 }
 
-$widthMarker= ''.strrev($sb);
-$chart->setTopLeftPosition('K2');
-$chart->setBottomRightPosition($widthMarker.'23');
 
+
+$chart->setTopLeftPosition('J2');
+//$chart->setBottomRightPosition($widthMarker.'23');
+$chart->setBottomRightPosition($widthMarker.'23');
 //Add the chart to the worksheet
 $worksheet->addChart($chart);
 
@@ -242,7 +274,7 @@ for($z=1;$z<sizeof($deptArray);$z++){
             ($placeholder[4]*4)+($placeholder[5]*5+($placeholder[6]*6)))/(array_sum($placeholder));
         $average=number_format((float)$average, 2, '.', '');
 
-        $placeholder[8]=$average;
+        $placeholder[7]=$average;
         array_push($dataArray,$placeholder);
 
 
@@ -263,7 +295,7 @@ $dataSeriesLabels = [
 
 
 
-$len=''.(sizeof($questionJSON))+1;
+
 $xAxisTickValues = [
     new \PhpOffice\PhpSpreadsheet\Chart\DataSeriesValues('String', $sheetTitle.'!$A$2:$A$'.$len, null, $len),	//	Q1 to Q4
 ];
@@ -320,7 +352,7 @@ $chart = new Chart(
 //Get width of questions
 
 
-$chart->setTopLeftPosition('K2');
+$chart->setTopLeftPosition('J2');
 $chart->setBottomRightPosition($widthMarker.'23');
 
 //Add the chart to the worksheet
@@ -351,5 +383,6 @@ $writer->setIncludeCharts(true);
 header("Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
 header("Content-Disposition: attachment; filename=abc.xlsx");
 $writer->save('php://output','Xlsx');
+exit();
 
 ?>
