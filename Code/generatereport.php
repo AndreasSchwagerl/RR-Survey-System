@@ -77,7 +77,7 @@ $colMarker=array('B','C','D','E','F','G');
 $spreadsheet = new Spreadsheet();
 $spreadsheet->getActiveSheet()->setTitle('All');
 //Create Headers
-$headers=array("Question","1 (Fully Agree)","2 (Mostly Agree)","3 (Partly Agree)","4 (Partly Agree)","5 (Mostly Agree","6 (Fully Agree)","AVG");
+$headers=array("Question","1 (Fully Agree)","2 (Mostly Agree)","3 (Partly Agree)","4 (Partly Agree)","5 (Mostly Agree","6 (Fully Agree)","Average");
 //Create array to hold spreadsheet data
 $dataArray=array();
 $deptArray=array('All');
@@ -135,9 +135,7 @@ $spreadsheet->setActiveSheetIndex(0);
 $worksheet = $spreadsheet->getActiveSheet();
 $worksheet->fromArray($dataArray);
 
-$spreadsheet->getActiveSheet()
-    ->setCellValue('B3',1);
-;
+
 
 
 $sheetTitle=''.$deptArray[0];
@@ -223,25 +221,13 @@ if($len>15){
 
 
 $chart->setTopLeftPosition('J2');
-//$chart->setBottomRightPosition($widthMarker.'23');
 $chart->setBottomRightPosition($widthMarker.'23');
+styleCells($spreadsheet,$len);
 //Add the chart to the worksheet
 $worksheet->addChart($chart);
 
-$cell_st =[
-    'alignment' =>['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER],
-    'borders'=>['bottom' =>['style'=> \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_MEDIUM]]
-];
-$spreadsheet->getActiveSheet()->getStyle('B1:I'.((sizeof($responseArray))+1))->applyFromArray($cell_st);
-$spreadsheet->getActiveSheet()->getColumnDimension('A')->setWidth(20);
-$spreadsheet->getActiveSheet()->getColumnDimension('B')->setWidth(15);
-$spreadsheet->getActiveSheet()->getColumnDimension('C')->setWidth(15);
-$spreadsheet->getActiveSheet()->getColumnDimension('D')->setWidth(15);
-$spreadsheet->getActiveSheet()->getColumnDimension('E')->setWidth(15);
-$spreadsheet->getActiveSheet()->getColumnDimension('F')->setWidth(15);
-$spreadsheet->getActiveSheet()->getColumnDimension('G')->setWidth(15);
-$spreadsheet->getActiveSheet()->getColumnDimension('H')->setWidth(20);
-$spreadsheet->getActiveSheet()->getColumnDimension('I')->setWidth(15);
+
+
 
 
 for($z=1;$z<sizeof($deptArray);$z++){
@@ -282,6 +268,28 @@ for($z=1;$z<sizeof($deptArray);$z++){
 
 $worksheet = $spreadsheet->getActiveSheet();
 $worksheet->fromArray($dataArray);
+
+for($i=0;$i<sizeof($questionJSON);$i++){
+    $spreadsheet->getActiveSheet()
+    ->getComment('A'.($i+2))
+    ->getText()->createTextRun('Left Question:'."\r\n"."\r\n");
+    $spreadsheet->getActiveSheet()
+    ->getComment('A'.($i+2))
+    ->getText()->createTextRun(''.$questionJSON[$i]["QL"]."\r\n"."\r\n");
+    $spreadsheet->getActiveSheet()
+    ->getComment('A'.($i+2))
+    ->getText()->createTextRun('Right Question:'."\r\n"."\r\n");
+    $spreadsheet->getActiveSheet()
+    ->getComment('A'.($i+2))
+    ->getText()->createTextRun(''.$questionJSON[$i]["QR"]);
+    $spreadsheet->getActiveSheet()
+    ->getComment('A'.($i+2))
+    ->setHeight(250);
+    $spreadsheet->getActiveSheet()
+    ->getComment('A'.($i+2))
+    ->setWidth(300);
+}
+
 $sheetTitle=''.$deptArray[$z];
 
 $dataSeriesLabels = [
@@ -297,7 +305,7 @@ $dataSeriesLabels = [
 
 
 $xAxisTickValues = [
-    new \PhpOffice\PhpSpreadsheet\Chart\DataSeriesValues('String', $sheetTitle.'!$A$2:$A$'.$len, null, $len),	//	Q1 to Q4
+    new \PhpOffice\PhpSpreadsheet\Chart\DataSeriesValues('String', $sheetTitle.'!$A$2:$A$'.$len, null, $len),	
 ];
 
 
@@ -324,13 +332,14 @@ $series = new DataSeries(
     $dataSeriesValues								// plotValues
 );
 
-//  Set up a layout object for the Pie chart
+//  Set up a layout object for the chart
 $layout = new \PhpOffice\PhpSpreadsheet\Chart\Layout();
 $layout->setShowVal(true);
 $layout->setShowPercent(true);
 
 //  Set the series in the plot area
 $plotArea = new \PhpOffice\PhpSpreadsheet\Chart\PlotArea($layout, [$series]);
+
 //  Set the chart legend
 $legend = new \PhpOffice\PhpSpreadsheet\Chart\Legend(\PhpOffice\PhpSpreadsheet\Chart\Legend::POSITION_RIGHT, null, false);
 
@@ -345,12 +354,12 @@ $chart = new Chart(
     true, // plotVisibleOnly
     0, // displayBlanksAs
     null, // xAxisLabel
-    null   // yAxisLabel    - Pie charts don't have a Y-Axis
+    null   // yAxisLabel    - Chart doesn't have a Y-Axis
 );
 
-//Set the position where the chart should appear in the worksheet
-//Get width of questions
 
+
+//Set the position where the chart should appear in the worksheet
 
 $chart->setTopLeftPosition('J2');
 $chart->setBottomRightPosition($widthMarker.'23');
@@ -359,23 +368,68 @@ $chart->setBottomRightPosition($widthMarker.'23');
 $worksheet->addChart($chart);
 
 //Style Sheet
-$cell_st =[
-    'alignment' =>['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER],
-    'borders'=>['bottom' =>['style'=> \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_MEDIUM]]
-];
-$spreadsheet->getActiveSheet()->getStyle('B1:I'.((sizeof($responseArray))+1))->applyFromArray($cell_st);
-$spreadsheet->getActiveSheet()->getColumnDimension('A')->setWidth(20);
-$spreadsheet->getActiveSheet()->getColumnDimension('B')->setWidth(15);
-$spreadsheet->getActiveSheet()->getColumnDimension('C')->setWidth(15);
-$spreadsheet->getActiveSheet()->getColumnDimension('D')->setWidth(15);
-$spreadsheet->getActiveSheet()->getColumnDimension('E')->setWidth(15);
-$spreadsheet->getActiveSheet()->getColumnDimension('F')->setWidth(15);
-$spreadsheet->getActiveSheet()->getColumnDimension('G')->setWidth(15);
-$spreadsheet->getActiveSheet()->getColumnDimension('H')->setWidth(20);
-$spreadsheet->getActiveSheet()->getColumnDimension('I')->setWidth(15);
+styleCells($spreadsheet,$len);
 
 }
 
+//Helper function to style cells
+function styleCells($spreadsheet,$len){
+    $styleArray = [
+        'font' => [
+            'bold' => true,
+        ],
+        'alignment' => [
+            'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+        ],
+        'borders' => [
+            'bottom' => [
+                'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_MEDIUM,
+            ],
+        ],
+    ];
+    
+    $centerStyle=[
+    
+        'alignment' => [
+        'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+        ],
+    ];
+    
+    
+    $spreadsheet->getActiveSheet()->getStyle('A1:H1')->applyFromArray($styleArray);
+    $spreadsheet->getActiveSheet()->getStyle('A2:H'.($len))->applyFromArray($centerStyle);
+    //Set Cell Colors
+    $spreadsheet->getActiveSheet()->getStyle('B1')->getFill()
+    ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+    ->getStartColor()->setARGB('99ff99');
+    $spreadsheet->getActiveSheet()->getStyle('C1')->getFill()
+    ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+    ->getStartColor()->setARGB('b3ffb3');
+    $spreadsheet->getActiveSheet()->getStyle('D1')->getFill()
+    ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+    ->getStartColor()->setARGB('ccffcc');
+    $spreadsheet->getActiveSheet()->getStyle('E1')->getFill()
+    ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+    ->getStartColor()->setARGB('ffc6b3');
+    $spreadsheet->getActiveSheet()->getStyle('F1')->getFill()
+    ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+    ->getStartColor()->setARGB('ffb399');
+    $spreadsheet->getActiveSheet()->getStyle('G1')->getFill()
+    ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+    ->getStartColor()->setARGB('ff9f80');
+
+    $spreadsheet->getActiveSheet()->getColumnDimension('A')->setWidth(20);
+    $spreadsheet->getActiveSheet()->getColumnDimension('B')->setWidth(15);
+    $spreadsheet->getActiveSheet()->getColumnDimension('C')->setWidth(15);
+    $spreadsheet->getActiveSheet()->getColumnDimension('D')->setWidth(15);
+    $spreadsheet->getActiveSheet()->getColumnDimension('E')->setWidth(15);
+    $spreadsheet->getActiveSheet()->getColumnDimension('F')->setWidth(15);
+    $spreadsheet->getActiveSheet()->getColumnDimension('G')->setWidth(15);
+    $spreadsheet->getActiveSheet()->getColumnDimension('H')->setWidth(20);
+    $spreadsheet->getActiveSheet()->getColumnDimension('I')->setWidth(15);
+}
+
+//Write file and send to browser
 $spreadsheet->setActiveSheetIndex(0);
 
 $writer = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($spreadsheet, 'Xlsx');

@@ -204,7 +204,7 @@
                 var blob = new Blob([request.response], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
                 var link = document.createElement('a');
                 link.href = window.URL.createObjectURL(blob);
-                link.download = "Survey"+num;
+                link.download = "Survey"+num+".xlsx";
                 document.body.appendChild(link);
 
                 link.click();
